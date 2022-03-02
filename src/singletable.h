@@ -1,3 +1,7 @@
+/*
+  Declaration of modification by rt121212121 as per Apache v2.0 license.
+*/
+
 #ifndef CUCKOO_FILTER_SINGLE_TABLE_H_
 #define CUCKOO_FILTER_SINGLE_TABLE_H_
 
@@ -8,6 +12,14 @@
 #include "bitsutil.h"
 #include "debug.h"
 #include "printutil.h"
+
+#ifdef __GNUC__
+#define PACK( __Declaration__ ) __Declaration__ __attribute__((__packed__))
+#endif
+
+#ifdef _MSC_VER
+#define PACK( __Declaration__ ) __pragma( pack(push, 1) ) __Declaration__ __pragma( pack(pop))
+#endif
 
 namespace cuckoofilter {
 
@@ -23,9 +35,9 @@ class SingleTable {
   static const size_t kPaddingBuckets =
     ((((kBytesPerBucket + 7) / 8) * 8) - 1) / kBytesPerBucket;
 
-  struct Bucket {
+  PACK(struct Bucket {
     char bits_[kBytesPerBucket];
-  } __attribute__((__packed__));
+  });
 
   // using a pointer adds one more indirection
   Bucket *buckets_;
@@ -37,7 +49,7 @@ class SingleTable {
     memset(buckets_, 0, kBytesPerBucket * (num_buckets_ + kPaddingBuckets));
   }
 
-  ~SingleTable() { 
+  ~SingleTable() {
     delete[] buckets_;
   }
 
@@ -45,12 +57,12 @@ class SingleTable {
     return num_buckets_;
   }
 
-  size_t SizeInBytes() const { 
-    return kBytesPerBucket * num_buckets_; 
+  size_t SizeInBytes() const {
+    return kBytesPerBucket * num_buckets_;
   }
 
-  size_t SizeInTags() const { 
-    return kTagsPerBucket * num_buckets_; 
+  size_t SizeInTags() const {
+    return kTagsPerBucket * num_buckets_;
   }
 
   std::string Info() const {

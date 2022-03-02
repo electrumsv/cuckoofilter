@@ -1,3 +1,7 @@
+/*
+  Declaration of modification by rt121212121 as per Apache v2.0 license.
+*/
+
 #ifndef CUCKOO_FILTER_PRINTUTIL_H_
 #define CUCKOO_FILTER_PRINTUTIL_H_
 
@@ -6,22 +10,9 @@
 namespace cuckoofilter {
 class PrintUtil {
  public:
-  static std::string bytes_to_hex(const char *data, size_t len) {
-    std::string hexstr = "";
-    static const char hexes[] = "0123456789ABCDEF ";
+  static std::string bytes_to_hex(const char *data, size_t len);
 
-    for (size_t i = 0; i < len; i++) {
-      unsigned char c = data[i];
-      hexstr.push_back(hexes[c >> 4]);
-      hexstr.push_back(hexes[c & 0xf]);
-      hexstr.push_back(hexes[16]);
-    }
-    return hexstr;
-  }
-
-  static std::string bytes_to_hex(const std::string &s) {
-    return bytes_to_hex((const char *)s.data(), s.size());
-  }
+  static std::string bytes_to_hex(const std::string &s);
 
  private:
   PrintUtil();

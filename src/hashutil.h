@@ -1,3 +1,7 @@
+/*
+  Declaration of modification by rt121212121 as per Apache v2.0 license.
+*/
+
 #ifndef CUCKOO_FILTER_HASHUTIL_H_
 #define CUCKOO_FILTER_HASHUTIL_H_
 
@@ -7,7 +11,9 @@
 
 #include <string>
 
+#ifdef USE_OPENSSL
 #include <openssl/evp.h>
+#endif
 #include <random>
 
 namespace cuckoofilter {
@@ -36,18 +42,35 @@ class HashUtil {
   // Null hash (shift and mask)
   static uint32_t NullHash(const void *buf, size_t length, uint32_t shiftbytes);
 
+#ifdef USE_OPENSSL
   // Wrappers for MD5 and SHA1 hashing using EVP
   static std::string MD5Hash(const char *inbuf, size_t in_length);
   static std::string SHA1Hash(const char *inbuf, size_t in_length);
+#endif
 
  private:
   HashUtil();
 };
 
+#define MURMUR_SEED1 342343433
+
+class MurmurHasher {
+ public:
+  MurmurHasher() {
+  }
+
+  uint64_t operator()(const void *key, size_t length) const {
+    uint32_t h1 = HashUtil::MurmurHash(key, length, MURMUR_SEED1);
+    uint64_t h2 = HashUtil::MurmurHash(key, length, MURMUR_SEED1 ^ h1);
+    return (uint64_t)h1 | (h2 << 32);
+  }
+};
+
+#ifdef USE_UINT128
 // See Martin Dietzfelbinger, "Universal hashing and k-wise independent random
 // variables via integer arithmetic without primes".
 class TwoIndependentMultiplyShift {
-  unsigned __int128 multiply_, add_;
+  uint128_t multiply_, add_;
 
  public:
   TwoIndependentMultiplyShift() {
@@ -65,6 +88,7 @@ class TwoIndependentMultiplyShift {
     return (add_ + multiply_ * static_cast<decltype(multiply_)>(key)) >> 64;
   }
 };
+#endif
 
 // See Patrascu and Thorup's "The Power of Simple Tabulation Hashing"
 class SimpleTabulation {

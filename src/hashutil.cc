@@ -1,3 +1,7 @@
+/*
+  Declaration of modification by rt121212121 as per Apache v2.0 license.
+*/
+
 // Pulled from lookup3.c by Bob Jenkins
 #include "hashutil.h"
 
@@ -149,8 +153,8 @@ uint32_t HashUtil::BobHash(const void *buf, size_t length, uint32_t seed) {
 
 #else /* make valgrind happy */
 
-    const u_int8_t *k8;
-    k8 = (const u_int8_t *)k;
+    const uint8_t *k8;
+    k8 = (const uint8_t *)k;
     switch (length) {
       case 12:
         c += k[2];
@@ -190,8 +194,8 @@ uint32_t HashUtil::BobHash(const void *buf, size_t length, uint32_t seed) {
 #endif /* !valgrind */
 
   } else if (HASH_LITTLE_ENDIAN && ((u.i & 0x1) == 0)) {
-    const u_int16_t *k = (const u_int16_t *)buf; /* read 16-bit chunks */
-    const u_int8_t *k8;
+    const uint16_t *k = (const uint16_t *)buf; /* read 16-bit chunks */
+    const uint8_t *k8;
 
     /*--------------- all but last block: aligned reads and different mixing */
     while (length > 12) {
@@ -204,7 +208,7 @@ uint32_t HashUtil::BobHash(const void *buf, size_t length, uint32_t seed) {
     }
 
     /*----------------------------- handle the last (probably partial) block */
-    k8 = (const u_int8_t *)k;
+    k8 = (const uint8_t *)k;
     switch (length) {
       case 12:
         c += k[4] + (((uint32_t)k[5]) << 16);
@@ -248,7 +252,7 @@ uint32_t HashUtil::BobHash(const void *buf, size_t length, uint32_t seed) {
     }
 
   } else { /* need to read the key one byte at a time */
-    const u_int8_t *k = (const u_int8_t *)buf;
+    const uint8_t *k = (const uint8_t *)buf;
 
     /*--------------- all but the last block: affect some 32 bits of (a,b,c) */
     while (length > 12) {
@@ -709,6 +713,7 @@ uint32_t HashUtil::NullHash(const void *buf, size_t length,
           (data[(length - shiftbytes - 1)]));
 }
 
+#ifdef USE_OPENSSL
 /*
  * Compatibility layer for OpenSSL < 1.1.0.
  * Implemented as proposed by https://wiki.openssl.org/index.php/OpenSSL_1.1.0_Changes
@@ -763,4 +768,6 @@ std::string HashUtil::SHA1Hash(const char *inbuf, size_t in_length) {
 
   return std::string((char *)md_value, (size_t)md_len);
 }
+#endif
+
 }  // namespace cuckoofilter

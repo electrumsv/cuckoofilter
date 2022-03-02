@@ -1,3 +1,7 @@
+/*
+  Declaration of modification by rt121212121 as per Apache v2.0 license.
+*/
+
 #ifndef CUCKOO_FILTER_CUCKOO_FILTER_H_
 #define CUCKOO_FILTER_CUCKOO_FILTER_H_
 
@@ -31,7 +35,7 @@ const size_t kMaxCuckooCount = 500;
 // PackedTable to enable semi-sorting
 template <typename ItemType, size_t bits_per_item,
           template <size_t> class TableType = SingleTable,
-          typename HashFamily = TwoIndependentMultiplyShift>
+          typename HashFamily = MurmurHasher>
 class CuckooFilter {
   // Storage of items
   TableType<bits_per_item> *table_;
@@ -63,9 +67,9 @@ class CuckooFilter {
     return tag;
   }
 
-  inline void GenerateIndexTagHash(const ItemType& item, size_t* index,
+  inline void GenerateIndexTagHash(const ItemType& item, size_t item_size, size_t* index,
                                    uint32_t* tag) const {
-    const uint64_t hash = hasher_(item);
+    const uint64_t hash = hasher_(item, item_size);
     *index = IndexHash(hash >> 32);
     *tag = TagHash(hash);
   }
@@ -100,13 +104,13 @@ class CuckooFilter {
   ~CuckooFilter() { delete table_; }
 
   // Add an item to the filter.
-  Status Add(const ItemType &item);
+  Status Add(const ItemType &item, size_t item_size);
 
   // Report if the item is inserted, with false positive rate.
-  Status Contain(const ItemType &item) const;
+  Status Contain(const ItemType &item, size_t item_size) const;
 
   // Delete an key from the filter
-  Status Delete(const ItemType &item);
+  Status Delete(const ItemType &item, size_t item_size);
 
   /* methods for providing stats  */
   // summary infomation
@@ -117,12 +121,21 @@ class CuckooFilter {
 
   // size of the filter in bytes.
   size_t SizeInBytes() const { return table_->SizeInBytes(); }
+
+  void VictimDetails(uint32_t *used, size_t *index, uint32_t *tag) {
+    *used = 0;
+    if (victim_.used) {
+      *used = 1;
+      *index = victim_.index;
+      *tag = victim_.tag;
+    }
+  }
 };
 
 template <typename ItemType, size_t bits_per_item,
           template <size_t> class TableType, typename HashFamily>
 Status CuckooFilter<ItemType, bits_per_item, TableType, HashFamily>::Add(
-    const ItemType &item) {
+    const ItemType &item, size_t item_size) {
   size_t i;
   uint32_t tag;
 
@@ -130,7 +143,7 @@ Status CuckooFilter<ItemType, bits_per_item, TableType, HashFamily>::Add(
     return NotEnoughSpace;
   }
 
-  GenerateIndexTagHash(item, &i, &tag);
+  GenerateIndexTagHash(item, item_size, &i, &tag);
   return AddImpl(i, tag);
 }
 
@@ -164,12 +177,12 @@ Status CuckooFilter<ItemType, bits_per_item, TableType, HashFamily>::AddImpl(
 template <typename ItemType, size_t bits_per_item,
           template <size_t> class TableType, typename HashFamily>
 Status CuckooFilter<ItemType, bits_per_item, TableType, HashFamily>::Contain(
-    const ItemType &key) const {
+    const ItemType &key, size_t item_size) const {
   bool found = false;
   size_t i1, i2;
   uint32_t tag;
 
-  GenerateIndexTagHash(key, &i1, &tag);
+  GenerateIndexTagHash(key, item_size, &i1, &tag);
   i2 = AltIndex(i1, tag);
 
   assert(i1 == AltIndex(i2, tag));
@@ -187,11 +200,11 @@ Status CuckooFilter<ItemType, bits_per_item, TableType, HashFamily>::Contain(
 template <typename ItemType, size_t bits_per_item,
           template <size_t> class TableType, typename HashFamily>
 Status CuckooFilter<ItemType, bits_per_item, TableType, HashFamily>::Delete(
-    const ItemType &key) {
+    const ItemType &key, size_t item_size) {
   size_t i1, i2;
   uint32_t tag;
 
-  GenerateIndexTagHash(key, &i1, &tag);
+  GenerateIndexTagHash(key, item_size, &i1, &tag);
   i2 = AltIndex(i1, tag);
 
   if (table_->DeleteTagFromBucket(i1, tag)) {

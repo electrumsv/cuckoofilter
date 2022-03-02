@@ -9,3 +9,5 @@
 *.o
 *.so
 test
+.vscode/
+*.egg-info/
