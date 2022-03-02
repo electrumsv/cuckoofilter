@@ -37,7 +37,8 @@ powers of two. This means that if the required space goes above 95% of the power
 for the given maximum key count, then the actual capacity allocated will be the next power of two.
 
 The table below illustrates the rate of false positives for a table of a given capacity (Maximum)
-used to a given extent (Added).
+used to a given extent (Added). Note that when this table was generated, the bits of storage per
+item was 12.
 
 Key:
 
@@ -50,7 +51,7 @@ Key:
 
 
 | Maximum  | Added    | Minimum  | Maximum  | Average  | Rate        |
-| ---------|--------- | -------- | -------- | -------- | ----------- |
+| -------: |--------: | -------: | -------: | -------: | ----------: |
 |   503316 |     2000 |        1 |       14 |      7.2 |    0.000007 |
 |   503316 |     4000 |        5 |       26 |     15.4 |    0.000015 |
 |   503316 |     8000 |       19 |       42 |     29.0 |    0.000029 |
