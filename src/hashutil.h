@@ -5,10 +5,10 @@
 #ifndef CUCKOO_FILTER_HASHUTIL_H_
 #define CUCKOO_FILTER_HASHUTIL_H_
 
+#include <limits.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <sys/types.h>
-
 #include <string>
 
 #ifdef USE_OPENSSL
